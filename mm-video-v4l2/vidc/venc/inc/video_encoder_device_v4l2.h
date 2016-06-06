@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------------
-Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
+Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -34,7 +34,9 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OMX_VideoExt.h"
 #include "OMX_QCOMExtns.h"
 #include "qc_omx_component.h"
+#ifdef _VQZIP_
 #include "VQZip.h"
+#endif
 #include "omx_video_common.h"
 #include "omx_video_base.h"
 #include "omx_video_encoder.h"
@@ -282,6 +284,17 @@ public:
     void setCookieForConfig(void *cookie);
     ssize_t getBufferSize();
     unsigned int getBufferCount();
+struct extradata_buffer_info {
+    unsigned long buffer_size;
+    char* uaddr;
+    int count;
+    int size;
+    OMX_BOOL allocated;
+    enum v4l2_ports port_index;
+#ifdef USE_ION
+    struct venc_ion ion;
+#endif
+    bool vqzip_sei_found;
 };
 
 struct statistics {
@@ -353,6 +366,7 @@ class venc_dev
         bool venc_set_bitrate_type(OMX_U32 type);
         int venc_roiqp_log_buffers(OMX_QTI_VIDEO_CONFIG_ROIINFO *roiInfo);
 
+#ifdef _VQZIP_
         class venc_dev_vqzip
         {
             public:
@@ -375,6 +389,7 @@ class venc_dev
                 vqzip_compute_stats_t mVQZIPComputeStats;
         };
         venc_dev_vqzip vqzip;
+#endif
         struct venc_debug_cap m_debug;
         OMX_U32 m_nDriver_fd;
         int m_poll_efd;
@@ -493,6 +508,8 @@ class venc_dev
         bool venc_set_batch_size(OMX_U32 size);
         bool venc_calibrate_gop();
         void venc_set_vqzip_defaults();
+        bool venc_set_vqzip_defaults();
+        int venc_get_index_from_fd(OMX_U32 fd);
         bool venc_validate_hybridhp_params(OMX_U32 layers, OMX_U32 bFrames, OMX_U32 count, int mode);
         bool venc_set_hierp_layers(OMX_U32 hierp_layers);
         bool venc_set_baselayerid(OMX_U32 baseid);
@@ -504,6 +521,8 @@ class venc_dev
         bool venc_set_layer_bitrates(QOMX_EXTNINDEX_VIDEO_HYBRID_HP_MODE* hpmode);
         bool venc_set_roi_qp_info(OMX_QTI_VIDEO_CONFIG_ROIINFO *roiInfo);
         bool venc_set_low_latency(OMX_BOOL enable);
+        bool venc_set_low_latency(OMX_BOOL enable);
+        bool venc_set_roi_qp_info(OMX_QTI_VIDEO_CONFIG_ROIINFO *roiInfo);
 
 #ifdef MAX_RES_1080P
         OMX_U32 pmem_free();
@@ -533,6 +552,10 @@ class venc_dev
         bool is_thulium_v1;
         bool camera_mode_enabled;
         OMX_BOOL low_latency_mode;
+        struct {
+            bool dirty;
+            OMX_QTI_VIDEO_CONFIG_ROIINFO info;
+        } roi;
 
         bool venc_empty_batch (OMX_BUFFERHEADERTYPE *buf, unsigned index);
         static const int kMaxBuffersInBatch = 16;

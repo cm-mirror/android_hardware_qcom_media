@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------------
-Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
+Copyright (c) 2010-2016, The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -136,9 +136,10 @@ static const char* MEM_DEVICE = "/dev/pmem_smipool";
         & BITMASK_FLAG(mIndex))
 #define BITMASK_ABSENT(mArray,mIndex) (((mArray)[BITMASK_OFFSET(mIndex)] \
             & BITMASK_FLAG(mIndex)) == 0x0)
-#ifdef _ANDROID_ICS_
+
 #define MAX_NUM_INPUT_BUFFERS 64
-#endif
+#define MAX_NUM_OUTPUT_BUFFERS 64
+
 void* message_thread(void *);
 
 enum omx_venc_extradata_types {
@@ -147,6 +148,7 @@ enum omx_venc_extradata_types {
     VENC_EXTRADATA_FRAMEDIMENSION = 0x1000000,
     VENC_EXTRADATA_YUV_STATS = 0x800,
     VENC_EXTRADATA_VQZIP = 0x02000000,
+    VENC_EXTRADATA_ROI = 0x04000000,
 };
 
 // OMX video class
@@ -632,6 +634,7 @@ class omx_video: public qc_omx_component
         OMX_SKYPE_VIDEO_PARAM_DRIVERVER m_sDriverVer;
         OMX_SKYPE_VIDEO_CONFIG_QP m_sConfigQP;
         QOMX_EXTNINDEX_VIDEO_VENC_SAR m_sSar;
+        QOMX_VIDEO_H264ENTROPYCODINGTYPE m_sParamEntropy;
         PrependSPSPPSToIDRFramesParams m_sPrependSPSPPS;
         struct timestamp_info {
             OMX_U64 m_TimeStamp;
